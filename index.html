@@ -1,13 +1,1700 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevQuest - Learn to Code & Level up!</title>
+    <!-- Tailwind CSS browser compilation -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet font-sans">
+    <!-- React & DOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel standalone for browser compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #020617;
+        }
+        .font-display {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .ai-glow {
+            box-shadow: 0 0 25px -4px rgba(168, 85, 247, 0.15);
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-200 antialiased selection:bg-indigo-500/30">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
 
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Custom Vector Icon mapping to avoid bloated external libraries
+        const SVGMAP = {
+          Layout: <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />,
+          BookOpen: <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zm22 0h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />,
+          Terminal: <><polyline points="4 17 10 11 4 5" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" /><line x1="12" y1="19" x2="20" y2="19" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /></>,
+          Database: <><ellipse cx="12" cy="5" rx="9" ry="3" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" strokeWidth="2" stroke="currentColor" /></>,
+          Globe: <><circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" strokeWidth="2" stroke="currentColor" /></>,
+          Codepen: <><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" strokeWidth="2" stroke="currentColor" fill="none" /><line x1="12" y1="22" x2="12" y2="15.5" strokeWidth="2" stroke="currentColor" /><polyline points="22 8.5 12 15.5 2 8.5" strokeWidth="2" stroke="currentColor" fill="none" /><polyline points="2 15.5 12 8.5 22 15.5" strokeWidth="2" stroke="currentColor" fill="none" /><line x1="12" y1="2" x2="12" y2="8.5" strokeWidth="2" stroke="currentColor" /></>,
+          Network: <><rect x="16" y="16" width="6" height="6" rx="1" strokeWidth="2" stroke="currentColor" fill="none" /><rect x="2" y="16" width="6" height="6" rx="1" strokeWidth="2" stroke="currentColor" fill="none" /><rect x="9" y="2" width="6" height="6" rx="1" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M12 8v4M5 16v-4h14v4" strokeWidth="2" stroke="currentColor" fill="none" /></>,
+          Compass: <><circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" strokeWidth="2" stroke="currentColor" fill="none" /></>,
+          Flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />,
+          Cpu: <><rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M9 9h6v6H9zm0-5V2m3 2V2m3 2V2m5 7h2m-2 3h2m-2 3h2M9 20v2m3-2v2m3-2v2M4 9H2m2 3H2m2 3H2" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /></>,
+          Sparkles: <><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" /><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5zm14 12 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /></>,
+          Award: <><circle cx="12" cy="8" r="7" strokeWidth="2" stroke="currentColor" fill="none" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>,
+          Users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" strokeWidth="2" stroke="currentColor" fill="none" /><circle cx="9" cy="7" r="4" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" strokeWidth="2" stroke="currentColor" /></>,
+          Trophy: <><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18" strokeWidth="2" stroke="currentColor" /><path d="M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M12 2a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6Z" strokeWidth="2" stroke="currentColor" fill="none" /></>,
+          Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />,
+          HelpCircle: <><circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /></>,
+          Gem: <path d="M6 3h12l4 6-10 13L2 9Z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />,
+          Lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" strokeWidth="2" stroke="currentColor" fill="none" /><path d="M7 11V7a5 5 0 0 1 10 0v4" strokeWidth="2" stroke="currentColor" fill="none" /></>,
+          CheckCircle2: <><circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" /><path d="m9 12 2 2 4-4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" /></>,
+          AlertCircle: <><circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" /><line x1="12" y1="8" x2="12" y2="12" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /><line x1="12" y1="16" x2="12.01" y2="16" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /></>,
+          Play: <polygon points="5 3 19 12 5 21 5 3" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />,
+          RotateCcw: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" /><polyline points="3 3 3 8 8 8" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" /></>,
+          Code2: <><polyline points="16 18 22 12 16 6" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" /><polyline points="8 6 2 12 8 18" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" /></>,
+          ChevronRight: <polyline points="9 18 15 12 9 6" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" />,
+          School: <path d="m22 10-6-3-6 3-6-3-4 2 10 5 10-5zM6 12v5c0 2 2 3 6 3s6-1 6-3v-5" strokeWidth="2" stroke="currentColor" fill="none" />,
+          ArrowRight: <><line x1="5" y1="12" x2="19" y2="12" strokeWidth="2" stroke="currentColor" strokeLinecap="round" /><polyline points="12 5 19 12 12 19" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" /></>,
+          User: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" strokeWidth="2" stroke="currentColor" fill="none" /><circle cx="12" cy="7" r="4" strokeWidth="2" stroke="currentColor" fill="none" /></>,
+          Activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none" />,
+          Heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" strokeWidth="2" stroke="currentColor" fill="none" />,
+          MessageSquare: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" strokeWidth="2" stroke="currentColor" fill="none" />
+        };
+
+        const DynamicIcon = ({ name, className = "", size = 20 }) => {
+          const svgMarkup = SVGMAP[name] || SVGMAP.HelpCircle;
+          return (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {svgMarkup}
+            </svg>
+          );
+        };
+
+        // Static study track data
+        const PREDEFINED_TRACKS = [
+          {
+            id: "html_css",
+            title: "HTML & CSS",
+            description: "Esqueleto e design visual responsivo.",
+            iconName: "Layout",
+            difficulty: "Iniciante",
+            completed: false,
+            lessons: [
+              { id: "html_1", title: "Fundações do HTML", type: "teoria", duration: "3 min", xpReward: 100, theoryContent: "O HTML define as vigas e os tijolos das páginas web através de tags. ex: h1 para títulos destacados, p para parágrafos ordinários.", analogy: "HTML é como os tijolos de uma casa. CSS é a pintura e decorações." },
+              { id: "html_2", title: "Tags de Organização", type: "quiz", duration: "2 min", xpReward: 100, quizQuestion: "Qual elemento é auto-fechado no padrão HTML?", quizOptions: ["<div>", "<img>", "<p>", "<body>"], quizCorrectIndex: 1 },
+              { id: "html_3", title: "Tag de Cabeçalho Prático", type: "codigo", duration: "5 min", xpReward: 150, codeStarter: "<!-- Escreva seu H1 -->\n", codeInstruction: "Escreva uma tag <h1>Olá Mundo</h1> corretamente.", testCases: [{ input: "contém h1", expected: "true", description: "Verifica H1" }] }
+            ]
+          },
+          {
+            id: "javascript",
+            title: "JavaScript",
+            description: "Motores, funções, variáveis e lógica moderna.",
+            iconName: "FileCode",
+            difficulty: "Iniciante",
+            lessons: [
+              { id: "js_1", title: "Variáveis Dinâmicas", type: "teoria", duration: "4 min", xpReward: 100, theoryContent: "O JS possui tipagem dinâmica. 'const' cria recipientes imutáveis, enquanto 'let' aceita modificações de valores no ciclo.", analogy: "Variáveis são caixas rotuladas na memória do computador para guardar itens temporários." },
+              { id: "js_2", title: "O poder do Const", type: "quiz", duration: "3 min", xpReward: 100, quizQuestion: "O que acontece ao tentar reatribuir um valor a uma variável 'const'?", quizOptions: ["Muda normalmente", "Dispara um erro TypeError", "É ignorado em silêncio", "Desliga o navegador"], quizCorrectIndex: 1 },
+              { id: "js_3", title: "Multiplicar por Dois", type: "codigo", duration: "6 min", xpReward: 180, codeStarter: "function dobro(n) {\n  return \n}", codeInstruction: "Retorne o dobro da entrada 'n' na função dobro.", testCases: [{ input: "dobro(5)", expected: "10", description: "Dobro de 5" }] }
+            ]
+          },
+          {
+            id: "python",
+            title: "Python 101",
+            description: "Sintaxe limpa, decisões e scripts automatizados.",
+            iconName: "Terminal",
+            difficulty: "Iniciante",
+            lessons: [
+              { id: "py_1", title: "Espaçamento e Indentação", type: "teoria", duration: "4 min", xpReward: 100, theoryContent: "Python elimina o uso de chaves {}. A indentação determina o início e fim de funções e blocos lógicos como if.", analogy: "Indentação em Python é como subtópicos recuados em uma redação lógica." },
+              { id: "py_2", title: "Condicionais Simples", type: "quiz", duration: "2 min", xpReward: 100, quizQuestion: "Qual é o termo específico para senão se em Python?", quizOptions: ["elseif", "else if", "elif", "caseif"], quizCorrectIndex: 2 }
+            ]
+          },
+          {
+            id: "sql",
+            title: "SQL & Bancos",
+            description: "Consultas, tabelas e conexões estruturadas.",
+            iconName: "Database",
+            difficulty: "Intermediário",
+            lessons: [
+              { id: "sql_1", title: "Entendendo SELECT", type: "teoria", duration: "3 min", xpReward: 100, theoryContent: "O SQL serve para recuperar dados de tabelas. O SELECT especifica as colunas de interesse no servidor.", analogy: "O banco é uma coleção de planilhas. SELECT escolhe as colunas nas planilhas do Excel." },
+              { id: "sql_2", title: "Operador WHERE", type: "quiz", duration: "3 min", xpReward: 100, quizQuestion: "Qual cláusula filtra os dados em uma consulta SELECT?", quizOptions: ["FILTER", "WHERE", "GROUP", "LIMIT"], quizCorrectIndex: 1 }
+            ]
+          },
+          {
+            id: "java",
+            title: "Java Orientado",
+            description: "Classes, estruturas e compilador virtual.",
+            iconName: "Codepen",
+            difficulty: "Intermediário",
+            lessons: [
+              { id: "java_1", title: "Conceito de Objetos", type: "teoria", duration: "5 min", xpReward: 100, theoryContent: "Tudo em Java pertence a uma Classe. Elas atuam como blueprints de instâncias reais representadas.", analogy: "Uma Classe é como a fôrma de silicone do bolo. O bolo real é o objeto assado." }
+            ]
+          },
+          {
+            id: "csharp",
+            title: "C# Fundamentos",
+            description: "Tipagem forte e o poder do ecossistema .NET",
+            iconName: "Cpu",
+            difficulty: "Intermediário",
+            lessons: [
+              { id: "cs_1", title: "A Máquina Virtual CLR", type: "teoria", duration: "5 min", xpReward: 110, theoryContent: "C# compila para uma linguagem intermediária (IL) que o .NET gerencia em tempo real na CLR de forma hiper otimizada.", analogy: "CLR é como um tradutor especializado que lê as partituras IL e toca música perfeita no processador físico." }
+            ]
+          },
+          {
+            id: "web_dev",
+            title: "Desenv. Web",
+            description: "Integração cliente-servidor e APIs de alta escala.",
+            iconName: "Globe",
+            difficulty: "Intermediário",
+            lessons: [
+              { id: "web_1", title: "Verbos HTTP Clássicos", type: "teoria", duration: "4 min", xpReward: 100, theoryContent: "Interfaces usam verbos HTTP para requisitar ações no servidor. GET lê e POST grava os registros no banco.", analogy: "O garçom (HTTP) leva seu pedido (Requisição) da mesa (Client) até a cozinha de preparação (Server)." }
+            ]
+          },
+          {
+            id: "mobile",
+            title: "Mobile Apps",
+            description: "Arquitetura e componentes de telas móveis.",
+            iconName: "Compass",
+            difficulty: "Intermediário",
+            lessons: [
+              { id: "mob_1", title: "Stateful vs Stateless", type: "teoria", duration: "5 min", xpReward: 120, theoryContent: "No desenvolvimento mobile, interfaces reativas reconstroem instâncias na mudança de estados (States).", analogy: "Stateless é um pôster estático na parede. Stateful é um painel digital interativo de pontos." }
+            ]
+          },
+          {
+            id: "ai_dev",
+            title: "Eng. de IA",
+            description: "Modelos inteligentes, buscas de similaridade.",
+            iconName: "Sparkles",
+            difficulty: "Avançado",
+            lessons: [
+              { id: "ai_1", title: "A Arquitetura Transformer", type: "teoria", duration: "5 min", xpReward: 130, theoryContent: "Transformers operam com mecanismos de atenção sobre tokens para computar predições de probabilidade de resposta.", analogy: "A atenção descobre quais palavras na frase do interlocutor dão o contexto crucial de interpretação técnica." }
+            ]
+          },
+          {
+            id: "datastruct",
+            title: "Estruturas de Dados",
+            description: "Arrays, representações de árvores e grafos.",
+            iconName: "Network",
+            difficulty: "Avançado",
+            lessons: [
+              { id: "ds_1", title: "Complexidade Computacional", type: "teoria", duration: "6 min", xpReward: 150, theoryContent: "A análise Big O expressa os recursos e o tempo demandado para rodar algoritmos conforme a massa de inputs se expande.", analogy: "Pesquisar um nome na lista linearmente (O(N)) versus buscar por partição binária (O(log N))." }
+            ]
+          }
+        ];
+
+        const INITIAL_ACHIEVEMENTS = [
+          { id: "first_steps", title: "Fundações Sólidas", description: "Ganhe seus primeiros pontos resolvendo qualquer módulo ou lição.", icon: "Compass", unlocked: false, xpReward: 150 },
+          { id: "tutor_talk", title: "Yuki Approves", description: "Bata papo com o Yuki e tire sua primeira dúvida no suporte inteligente.", icon: "Sparkles", unlocked: false, xpReward: 100 },
+          { id: "code_master", title: "Compilado com Sucesso", description: "Escreva e valide seu script prático na IDE sem cometer falhas.", icon: "Cpu", unlocked: false, xpReward: 300 },
+          { id: "interview_star", title: "Executivo Pleno", description: "Acerte os termos e passe no painel de entrevistas por IA.", icon: "Award", unlocked: false, xpReward: 500 }
+        ];
+
+        const CAREER_ROADMAPS = [
+          {
+            id: "front",
+            role: "Frontend Engineer Pro",
+            title: "Caminho Reativo de Telas",
+            description: "Construa interfaces ricas utilizando a base de HTML/CSS e JavaScript.",
+            difficulty: "Iniciante ao Pleno",
+            milestones: [
+              { id: "ms_1", title: "Arquitetando Marcações", description: "Aprenda fundamentos semânticos de HTML e estilo.", requiredLessons: ["html_1", "html_2"] },
+              { id: "ms_2", title: "Engrenagem Dinâmica", description: "Domine loops, métodos, arrays e chamadas no navegador.", requiredLessons: ["js_1", "js_2"] }
+            ]
+          },
+          {
+            id: "data_eng",
+            role: "Data & IA Specialist",
+            title: "Pipeline de Dados Inteligente",
+            description: "Analise grandes dados com motores de banco SQL estruturados e Python condicional.",
+            difficulty: "Intermediário ao Senior",
+            milestones: [
+              { id: "ms_p", title: "Lógica Geral", description: "Automações e indentação em scripts Python.", requiredLessons: ["py_1"] },
+              { id: "ms_s", title: "Relacionamentos", description: "Manipule tabelas relacionais com queries SQL clássicas.", requiredLessons: ["sql_1"] }
+            ]
+          }
+        ];
+
+        const WEEKLY_RANKING = [
+          { name: "Guilherme Santos", avatar: "👨‍💻", xpThisWeek: 2400, level: 12 },
+          { name: "Clara Guedes", avatar: "👩‍🚀", xpThisWeek: 1950, level: 9 },
+          { name: "Rafael Barbosa", avatar: "👾", xpThisWeek: 1600, level: 11 },
+          { name: "Você", avatar: "🧙‍♀️", xpThisWeek: 450, level: 3, isCurrentUser: true },
+          { name: "Luiza Costa", avatar: "🦄", xpThisWeek: 150, level: 5 }
+        ];
+
+        const MOCK_GROUPS = [
+          { id: "g1", name: "Devs do Futuro", desc: "Debates e auxílio em algorítmos diários para juniores.", category: "Geral", membersCount: 124, joined: false },
+          { id: "g2", name: "AI Hackers", desc: "Grupos e laboratórios de APIs de IA generativa.", category: "Inteligência Artificial", membersCount: 89, joined: true }
+        ];
+
+        // LOCAL API SIMULATION ENGINE - Bypasses missing server to work perfectly offline
+        const simulatedApi = {
+          askYuki: (message, history) => {
+            const query = message.toLowerCase();
+            let text = "";
+            if (query.includes("flexbox") || query.includes("justify")) {
+              text = "CSS Flexbox é fantástico! Pense nele como caixas de brinquedo organizadas numa prateleira. Se você usa 'justify-content: space-between', as caixas se repelem para as extremidades. 'center' unifica ao meio! Ficou fácil?";
+            } else if (query.includes("vari") || query.includes("declara")) {
+              text = "No JS moderno: 'const' é imutável - como uma foto revelada. 'let' é mutável - como um quadro branco de piloto. Use const sempre por padrão para evitar bugs silenciosos na sua pilha!";
+            } else if (query.includes("projeto") || query.includes("portfolio")) {
+              text = "Sugiro construir um mini-gerenciador de finanças local. Ele utiliza vetores, eventos sob botões, manipulação de DOM e guarda tudo offline por localStorage. Ótimo portfólio!";
+            } else if (query.includes("sql") || query.includes("select")) {
+              text = "Queries SQL operam como filtros lógicos em planilhas Excel gigantescas. SELECT demarca quais colunas recuperar, WHERE remove os registros indesejados, e JOIN amarra planilhas adicionais.";
+            } else {
+              text = "Hummm, que excelente tópico de códigos! No fundo, a engenharia se nutre de resolver pontualmente grandes problemas quebrando-os em mini-etapas. Vamos codar isso no Laboratório?";
+            }
+            return Promise.resolve({ text });
+          },
+          reviewCode: (code, title) => {
+            let feedback = "Análise final do Yuki IA:\nSuas linhas de código parecem muito limpas e organizadas!\n";
+            if (code.includes("n * 2") || code.includes("numero * 2") || code.includes("return n * 2") || code.includes("return numero * 2")) {
+              feedback += "✓ Sua multiplicação pelo dobro cumpre o esperado O(1) com tempo constante de resposta rápida!\n\nPode usar const arrow functions como upgrade: 'const dobro = (n) => n * 2;'.";
+            } else if (code.trim().includes("<h1>Olá Mundo</h1>") || code.trim().toLowerCase().includes("olá mundo")) {
+              feedback += "✓ Excelente uso de tags semânticas de HTML do tipo Headline H1! Segue os termos do World Wide Web.";
+            } else {
+              feedback += "Código correto! A indentação está perfeita. Use as asserções locais de validação também para validar se as rotinas retornam o valor esperado.";
+            }
+            return Promise.resolve({ feedback });
+          },
+          generateChallenge: (track, difficulty) => {
+            const registry = {
+              javascript: {
+                title: "Inversão de Palavra",
+                description: "Crie um script em JavaScript que recebe uma string e inverte seu conteúdo.",
+                starterCode: "function inverter(str) {\n  // Retorne a string str de trás para frente\n  return \n}",
+                testCases: [{ input: "inverter('roma')", expected: "amor", description: "Inverte roma" }]
+              },
+              python: {
+                title: "Cálculo de Área de Retângulo",
+                description: "Escreva uma lógica que calcule a área com base em largura e profundidade.",
+                starterCode: "def calcular_area(l, p):\n    # Multiplique e devolva o resultado\n    pass",
+                testCases: [{ input: "calcular_area(4, 5)", expected: "20", description: "4 por 5" }]
+              },
+              html_css: {
+                title: "Botão Redondo",
+                description: "Escreva um botão HTML customizado.",
+                starterCode: "<button class='rounded-full'>Aperte</button>",
+                testCases: [{ input: "contém rounded", expected: "true", description: "Verifica classe rounded" }]
+              },
+              sql: {
+                title: "Idade Superior",
+                description: "Consulta SELECT filtrando usuários com idade acima de 21.",
+                starterCode: "SELECT * FROM usuarios WHERE ",
+                testCases: [{ input: "contem where", expected: "true", description: "Usa WHERE" }]
+              }
+            };
+            const challenge = registry[track] || registry.javascript;
+            return Promise.resolve(challenge);
+          },
+          submitInterview: (career, question, answer, round) => {
+            const hasTechKeywords = answer.length > 25;
+            const score = hasTechKeywords ? Math.floor(Math.random() * 16) + 81 : Math.floor(Math.random() * 20) + 50;
+            const feedback = hasTechKeywords
+              ? "Excelente! Você estruturou muito bem sua argumentação, mencionando boas práticas arquiteturais e complexidade coerente."
+              : "Sua resposta foi um pouco curta. O recomendável é desmitificar as fundações citando exemplos de buffers, escopos, thread queues e tratamentos.";
+            const nextQuestion = round === 1 
+              ? "Segunda Pergunta: Como você protege sua aplicação e dados contra ataques de SQL Injection no frontend e nas conexões de banco de dados?"
+              : "Terceira e última: Explique qual é o principal papel do garbage collector em engines modernos e seus tempos de limpeza.";
+            return Promise.resolve({ score, feedback, nextQuestion });
+          }
+        };
+
+        // --- COMPONENTS ---
+
+        // SIDEBAR COMPONENT
+        const Sidebar = ({ stats, activeTab, setActiveTab, darkMode, setDarkMode }) => {
+          const menu = [
+            { id: "dashboard", label: "Painel Central", icon: "Layout" },
+            { id: "lessons", label: "Estudos & Trilhas", icon: "BookOpen" },
+            { id: "sandbox", label: "Laboratório", icon: "Code2" },
+            { id: "tutor", label: "Tutor Yuki IA", icon: "Sparkles" },
+            { id: "interview", label: "Entrevistas", icon: "Award" },
+            { id: "roadmaps", label: "Milestones", icon: "Network" },
+            { id: "social", label: "Ligas & Ranking", icon: "Users" },
+            { id: "premium", label: "Upgrade PRO", icon: "Gem" }
+          ];
+          const barWidth = Math.min(100, Math.floor((stats.xp / stats.xpNeeded) * 100));
+
+          return (
+            <aside class={`w-full md:w-64 border-b md:border-b-0 md:border-r min-h-none md:min-h-screen transition-colors duration-200 ${
+              darkMode ? "bg-slate-950/80 border-slate-900 text-slate-200" : "bg-white border-slate-200 text-slate-800"
+            }`}>
+              <div class="p-5 border-b border-slate-900/10 dark:border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8.5 h-8.5 rounded-xl bg-sky-500 flex items-center justify-center font-black text-white text-xs shadow-lg shadow-sky-500/20">DQ</div>
+                  <div>
+                    <h1 class="font-display font-bold text-sm tracking-tight leading-none leading-none">DevQuest</h1>
+                    <span class="text-[10px] font-mono text-slate-400">v1.2.0 • Gamificado</span>
+                  </div>
+                </div>
+                {stats.isPremium && <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500/15 text-amber-500 tracking-wider">PRO</span>}
+              </div>
+
+              {/* STATS SUMMARY BOX */}
+              <div class="p-4 m-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/40 space-y-3">
+                <div>
+                  <div class="flex justify-between items-center text-xs mb-1">
+                    <span class="text-sky-400 font-bold">Nível {stats.level}</span>
+                    <span class="font-mono text-slate-500">{stats.xp}/{stats.xpNeeded} XP</span>
+                  </div>
+                  <div class="w-full h-2 rounded-full bg-slate-950 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full transition-all duration-300" style={{ width: `${barWidth}%` }} />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-semibold text-slate-400">
+                  <div class="bg-orange-500/10 border border-orange-500/20 p-2 rounded-xl">
+                    <span class="block text-orange-400 text-xs font-black">🔥 {stats.streak}</span>
+                    <span>Streak</span>
+                  </div>
+                  <div class="bg-rose-500/10 border border-rose-500/20 p-2 rounded-xl">
+                    <span class="block text-rose-400 text-xs font-black">⚡{stats.energy}</span>
+                    <span>Energia</span>
+                  </div>
+                  <div class="bg-yellow-500/10 border border-yellow-500/20 p-2 rounded-xl">
+                    <span class="block text-yellow-400 text-xs font-black">🪙 {stats.coins}</span>
+                    <span>Moedas</span>
+                  </div>
+                </div>
+              </div>
+
+              <nav class="p-2 space-y-1">
+                {menu.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setActiveTab(m.id)}
+                    class={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      activeTab === m.id
+                        ? "bg-sky-500/10 text-sky-400 border-l-4 border-sky-500"
+                        : "text-slate-400 hover:bg-slate-900/50 hover:text-slate-200"
+                    }`}
+                  >
+                    <div class="flex items-center gap-3">
+                      <DynamicIcon name={m.icon} size={15} />
+                      <span>{m.label}</span>
+                    </div>
+                    {m.id === "premium" && !stats.isPremium && <span class="bg-amber-500 text-slate-950 font-black text-[8px] px-1.5 py-0.5 rounded">PRO</span>}
+                  </button>
+                ))}
+              </nav>
+
+              <div class="p-4 border-t border-slate-900/10 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 mt-auto">
+                <span class="font-mono">{darkMode ? "Modo Escuro" : "Modo Claro"}</span>
+                <button onClick={() => setDarkMode(!darkMode)} class="p-2 rounded-lg bg-slate-900 text-slate-300 hover:text-white transition-colors">
+                  <DynamicIcon name={darkMode ? "Compass" : "Flame"} size={13} />
+                </button>
+              </div>
+            </aside>
+          );
+        };
+
+        // DASHBOARD COMPONENT
+        const Dashboard = ({ stats, achievements, claimReward, drinkCoffee, openTrack, collectDailyChest }) => {
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto animate-fade-in p-2">
+              <div class="p-6 md:p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950/30 border border-slate-800 text-white relative overflow-hidden">
+                <div class="relative z-10 space-y-3">
+                  <span class="px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-[9px] font-mono tracking-widest text-sky-400 font-extrabold uppercase animate-pulse">ESTUDOS ATIVOS</span>
+                  <h2 class="text-2xl md:text-3xl font-display font-black leading-tight">Olá, Programador! 👋</h2>
+                  <p class="text-slate-300 text-xs md:text-sm max-w-lg leading-relaxed">
+                    Você manteve sua sequência de estudos firme por <strong class="text-orange-400 font-bold">{stats.streak} dias seguidos</strong>. Mantenha o rendimento diário para pontuar mais alto nas ligas de rank.
+                  </p>
+                  <div class="flex gap-2.5 pt-1.5">
+                    <button onClick={openTrack} class="px-4.5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-black shadow-lg shadow-sky-500/10 transition-all cursor-pointer">Começar Prática</button>
+                    <button onClick={collectDailyChest} class="px-4.5 py-2.5 bg-slate-900 hover:bg-slate-850 text-sky-400 border border-slate-800 rounded-xl text-xs font-black transition-all cursor-pointer">Coletar Baú Diário</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* HUB GRIDS */}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-2 p-5 bg-slate-900/40 glass border border-slate-800 rounded-3xl space-y-4">
+                  <div class="flex justify-between items-center border-b border-slate-800/60 pb-2">
+                    <h3 class="font-display font-bold text-sm flex items-center gap-2"><DynamicIcon name="Flame" className="text-orange-400" size={16} /> Missões do Dia</h3>
+                    <span class="text-[9px] text-slate-500 uppercase font-mono">Reseta a cada 24h</span>
+                  </div>
+                  <div class="space-y-2.5">
+                    <div class="p-3 bg-slate-950/40 border border-slate-850/80 rounded-xl flex justify-between items-center">
+                      <div>
+                        <h4 class="text-xs font-bold">Primeiros Termos da Sintaxe</h4>
+                        <p class="text-[10px] text-slate-450 mt-0.5">Complete o primeiro módulo teórico introdutório.</p>
+                      </div>
+                      <span class="bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-lg">Pronto (+50XP)</span>
+                    </div>
+                    <div class="p-3 bg-slate-950/40 border border-slate-850/80 rounded-xl flex justify-between items-center">
+                      <div>
+                        <h4 class="text-xs font-semibold">Tire Dúvida Prática</h4>
+                        <p class="text-[10px] text-slate-450 mt-0.5">Poste sua primeira dúvida com o tutor.</p>
+                      </div>
+                      <span class="bg-yellow-500/10 border border-yellow-500/10 text-yellow-450 text-[10px] px-2 py-0.5 rounded-lg">+100 XP</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CAFE & ENERGY HUB */}
+                <div class="p-5 bg-slate-900/40 glass border border-slate-800 rounded-3xl flex flex-col justify-between text-center gap-4">
+                  <div class="space-y-1.5">
+                    <div class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto text-lg">☕</div>
+                    <h3 class="font-bold text-sm">Posto de Descanso</h3>
+                    <p class="text-[10px] text-slate-400 leading-relaxed">Errou respostas ou desafios técnicos? Recupere sua energia tomando um café duplo ou descansando.</p>
+                  </div>
+                  <div class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850/40 flex justify-around text-xs">
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">Energia</span>
+                      <strong class="text-rose-400">{stats.energy}/{stats.maxEnergy}</strong>
+                    </div>
+                    <div>
+                      <span class="text-[9px] text-slate-500 block">Moedas</span>
+                      <strong class="text-yellow-400">🪙 {stats.coins}</strong>
+                    </div>
+                  </div>
+                  <button onClick={drinkCoffee} class="py-2 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">Tomar Café Expresso (-25 Moedas)</button>
+                </div>
+              </div>
+
+              {/* ACHIEVEMENTS BLOCK */}
+              <div class="space-y-4">
+                <h3 class="font-display font-bold text-sm flex items-center gap-2"><DynamicIcon name="Award" className="text-yellow-500" size={16} /> Iniciações & Conquistas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {achievements.map((ach) => (
+                    <div key={ach.id} class={`p-4 bg-slate-900/30 glass border rounded-3xl flex justify-between items-center transition-all ${ach.unlocked ? "border-amber-500/30" : "border-slate-850 opacity-60"}`}>
+                      <div class="flex items-center gap-3">
+                        <div class={`p-2.5 rounded-2xl ${ach.unlocked ? "bg-amber-500/10 text-amber-400" : "bg-slate-950 text-slate-600 border border-slate-850"}`}><DynamicIcon name={ach.icon} size={20} /></div>
+                        <div>
+                          <h4 class="text-xs font-bold text-slate-200">{ach.title}</h4>
+                          <p class="text-[10px] text-slate-450 mt-0.5">{ach.description}</p>
+                        </div>
+                      </div>
+                      {ach.unlocked ? (
+                        <button onClick={() => claimReward(ach.id, ach.xpReward)} class="px-3.5 py-1 text-[10px] font-extrabold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg transition-colors cursor-pointer">Resgatar {ach.xpReward} XP</button>
+                      ) : (
+                        <span class="text-[9px] text-slate-500 uppercase font-mono font-bold flex items-center gap-1"><DynamicIcon name="Lock" size={10} /> Bloqueado</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // LESSONS ENGINE COMPONENT
+        const LessonsEngine = ({ tracks, stats, onCompleteLesson, deductEnergy, onSelectCodeChallenge, setActiveTab }) => {
+          const [selectedTrack, setSelectedTrack] = useState(tracks[0]);
+          const [selectedLesson, setSelectedLesson] = useState(null);
+
+          // Quiz elements
+          const [opt, setOpt] = useState(null);
+          const [checked, setChecked] = useState(false);
+          const [corr, setCorr] = useState(null);
+
+          const selectTrackHandler = (tk) => {
+            setSelectedTrack(tk);
+            setSelectedLesson(null);
+            resetQuiz();
+          };
+
+          const selectLessonHandler = (les) => {
+            setSelectedLesson(les);
+            resetQuiz();
+          };
+
+          const resetQuiz = () => {
+            setOpt(null);
+            setChecked(false);
+            setCorr(null);
+          };
+
+          const submitTheory = () => {
+            onCompleteLesson(selectedTrack.id, selectedLesson.id, selectedLesson.xpReward, 15);
+            setSelectedLesson({ ...selectedLesson, completed: true });
+          };
+
+          const verifyQuiz = () => {
+            if (opt === null) return;
+            if (stats.energy <= 0) {
+              alert("Você está sem energia! Tome um café na tela de Painel Central!");
+              return;
+            }
+            setChecked(true);
+            const ok = opt === selectedLesson.quizCorrectIndex;
+            setCorr(ok);
+            if (ok) {
+              onCompleteLesson(selectedTrack.id, selectedLesson.id, selectedLesson.xpReward, 25);
+              setSelectedLesson({ ...selectedLesson, completed: true });
+            } else {
+              deductEnergy(1);
+            }
+          };
+
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto animate-fade-in p-2">
+              <div class="space-y-2.5">
+                <h3 class="font-display font-bold text-sm tracking-tight">Selecione uma Trilha</h3>
+                <div class="flex gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
+                  {tracks.map((tk) => {
+                    const isSel = tk.id === selectedTrack.id;
+                    return (
+                      <button
+                        key={tk.id}
+                        onClick={() => selectTrackHandler(tk)}
+                        class={`px-4 py-3 rounded-2xl border text-left shrink-0 transition-all cursor-pointer flex gap-2.5 items-center min-w-[170px] ${
+                          isSel ? "bg-sky-500 border-sky-400 text-white shadow-md shadow-sky-500/10 font-bold" : "bg-slate-900/50 border-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <DynamicIcon name={tk.iconName} size={15} />
+                        <div>
+                          <h4 class="text-xs font-bold line-clamp-1">{tk.title}</h4>
+                          <span class="text-[9px] text-slate-400 font-normal">{tk.difficulty}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* TIMELINE & PLAY WORKER GRID */}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="p-4 bg-slate-900/30 glass border border-slate-850 rounded-3xl space-y-4">
+                  <div>
+                    <h3 class="font-display font-medium text-slate-350 text-xs">Jornada Prática</h3>
+                    <h4 class="font-black text-sm text-slate-100">{selectedTrack.title}</h4>
+                  </div>
+                  <div class="space-y-1.5 relative">
+                    <div class="absolute left-6.5 top-5 bottom-5 w-0.5 bg-slate-800" />
+                    {selectedTrack.lessons.map((les, idx) => {
+                      const active = selectedLesson?.id === les.id;
+                      return (
+                        <button
+                          key={les.id}
+                          onClick={() => selectLessonHandler(les)}
+                          class={`w-full flex items-center gap-3.5 p-2 rounded-xl text-left relative z-10 cursor-pointer ${active ? "bg-slate-905 bg-slate-900/40" : ""}`}
+                        >
+                          <div class={`w-6.5 h-6.5 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                            les.completed ? "bg-emerald-500/10 border-emerald-500 text-emerald-400" : active ? "bg-sky-500 border-sky-500 text-white" : "bg-slate-950 border-slate-800 text-slate-500"
+                          }`}>{les.completed ? "✓" : idx + 1}</div>
+                          <div>
+                            <h5 class={`text-[11px] font-bold ${active ? "text-sky-400" : "text-slate-300"}`}>{les.title}</h5>
+                            <span class="text-[8px] text-slate-500 uppercase font-mono font-medium">{les.duration} • {les.type}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* WORK ENGINE */}
+                <div class="md:col-span-2 p-5 bg-slate-900/30 glass border border-slate-850 rounded-3xl min-h-[350px]">
+                  {selectedLesson ? (
+                    <div class="space-y-4">
+                      <div class="flex justify-between items-start border-b border-slate-800/80 pb-3">
+                        <div>
+                          <span class="text-[9px] uppercase font-mono text-sky-400 font-extrabold tracking-wider">MÓDULO DE APRESDIZAGEM DE {selectedTrack.title.toUpperCase()}</span>
+                          <h3 class="font-display font-black text-lg text-slate-100">{selectedLesson.title}</h3>
+                        </div>
+                        <span class="px-2 py-0.5 bg-yellow-400/10 border border-yellow-500/20 text-yellow-500 text-xs font-mono rounded">+{selectedLesson.xpReward} XP</span>
+                      </div>
+
+                      {/* RENDERS */}
+                      {selectedLesson.type === "teoria" && (
+                        <div class="space-y-4">
+                          <p class="text-xs text-slate-350 leading-relaxed font-sans">{selectedLesson.theoryContent}</p>
+                          {selectedLesson.analogy && (
+                            <div class="p-3 bg-fuchsia-950/10 border border-fuchsia-900/20 rounded-2xl space-y-1">
+                              <h5 class="text-[10px] font-black uppercase text-fuchsia-400 tracking-wider">💡 Analogia da IA Yuki</h5>
+                              <p class="text-[11px] text-slate-300 leading-normal">{selectedLesson.analogy}</p>
+                            </div>
+                          )}
+                          <button onClick={submitTheory} class="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 rounded-xl text-xs font-extrabold flex gap-1.5 items-center transition-colors shadow-lg shadow-sky-500/10 cursor-pointer">
+                            <span>{selectedLesson.completed ? "Apreendido ✓" : "Concluir Aprendizado"}</span>
+                            {!selectedLesson.completed && <DynamicIcon name="CheckCircle2" size={13} />}
+                          </button>
+                        </div>
+                      )}
+
+                      {selectedLesson.type === "quiz" && (
+                        <div class="space-y-4">
+                          <h4 class="text-xs font-bold text-slate-200">{selectedLesson.quizQuestion}</h4>
+                          <div class="grid grid-cols-1 gap-2">
+                            {selectedLesson.quizOptions.map((optLabel, oIdx) => {
+                              const sel = opt === oIdx;
+                              return (
+                                <button
+                                  key={oIdx}
+                                  disabled={checked && selectedLesson.completed}
+                                  onClick={() => !checked && setOpt(oIdx)}
+                                  class={`w-full p-3 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
+                                    checked && oIdx === selectedLesson.quizCorrectIndex
+                                      ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
+                                      : checked && sel && !corr
+                                        ? "bg-rose-500/10 border-rose-500 text-rose-400"
+                                        : sel
+                                          ? "bg-sky-500/10 border-sky-500 text-sky-400"
+                                          : "bg-slate-950/40 border-slate-850 hover:bg-slate-900"
+                                  }`}
+                                >
+                                  {optLabel}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {checked && (
+                            <div class={`p-3 rounded-xl text-[10px] font-bold border flex gap-2 ${corr ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"}`}>
+                              <DynamicIcon name={corr ? "CheckCircle2" : "AlertCircle"} size={14} />
+                              <span>{corr ? "Maneiro! Você cravou a resposta correta." : "Hum, essa não é correta. Perdeu 1 de Energia ⚡"}</span>
+                            </div>
+                          )}
+
+                          {!selectedLesson.completed && (
+                            <button onClick={verifyQuiz} disabled={opt === null} class="px-5 py-2 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer">Verificar Resposta</button>
+                          )}
+                        </div>
+                      )}
+
+                      {selectedLesson.type === "codigo" && (
+                        <div class="space-y-4">
+                          <div class="p-4 rounded-2xl bg-slate-955/50 bg-slate-950/50 border border-slate-850/60 font-sans text-xs text-slate-300">
+                            <strong>Instruções do Desafio:</strong>
+                            <p class="mt-1 leading-relaxed">{selectedLesson.codeInstruction}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              onSelectCodeChallenge(selectedLesson, selectedTrack.id);
+                              setActiveTab("sandbox");
+                            }}
+                            class="px-5 py-3 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-black flex gap-1.5 items-center transition-all cursor-pointer"
+                          >
+                            <span>Ir para Editor do Laboratório</span>
+                            <DynamicIcon name="ArrowRight" size={13} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div class="flex flex-col items-center justify-center text-center p-8 space-y-3 mt-12">
+                      <div class="w-12 h-12 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center"><DynamicIcon name="BookOpen" size={24} /></div>
+                      <h4 class="font-bold text-slate-200">Selecione uma lição teórica ou prática</h4>
+                      <p class="text-[10px] text-slate-450 max-w-xs leading-relaxed">Clique em um dos tópicos na trilha da lista para progredir, obter XP e coins.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // CODE SANDBOX LAB COMPONENT
+        const CodeSandbox = ({ activeChallenge, trackId, stats, onCompleteChallenge, awardCoins }) => {
+          const [code, setCode] = useState("function dobro(n) {\n  return n * 2;\n}");
+          const [logs, setLogs] = useState([{ text: "Console iniciado. IDE Pronta.", type: "info" }]);
+          const [aiFeedback, setAiFeedback] = useState(null);
+          const [isGenerating, setIsGenerating] = useState(false);
+          const [isReviewing, setIsReviewing] = useState(false);
+
+          const [customTk, setCustomTk] = useState("javascript");
+          const [customDiff, setCustomDiff] = useState("Iniciante");
+          const [loadedChallenge, setLoadedChallenge] = useState(null);
+
+          useEffect(() => {
+            if (activeChallenge) {
+              setCode(activeChallenge.codeStarter || "");
+              setLogs([
+                { text: `Tarefa Carregada: ${activeChallenge.title}`, type: "info" },
+                { text: `Escreva o algoritmo final e aperte 'Validar' para compilar as asserções.`, type: "info" }
+              ]);
+              setAiFeedback(null);
+              setLoadedChallenge(null);
+            }
+          }, [activeChallenge]);
+
+          const compileCode = () => {
+            setLogs((prev) => [...prev, { text: "Executando no sandbox...", type: "info" }]);
+            try {
+              if (code.includes("alert(")) {
+                setLogs((prev) => [...prev, { text: "Operação travada por segurança.", type: "error" }]);
+                return;
+              }
+              const captured = [];
+              const logger = (...msg) => captured.push(msg.join(" "));
+              const runner = new Function("console", `
+                try {
+                  ${code}
+                  const match = "${code}".match(/function\\s+([a-zA-Z0-9_]+)/);
+                  if (match && match[1]) {
+                    const res = eval(match[1])(5);
+                    console("Dobro de 5 computado no sandbox: " + res);
+                  }
+                } catch(e) {
+                   console("Erro do compilador: " + e.message);
+                }
+              `);
+              runner(logger);
+              setLogs((prev) => [
+                ...prev,
+                ...captured.map(m => ({ text: m, type: m.includes("Erro") ? "error" : "success" }))
+              ]);
+            } catch (err) {
+              setLogs((prev) => [...prev, { text: err.toString(), type: "error" }]);
+            }
+          };
+
+          const checkAssertions = () => {
+            const hasCorrectStructure = code.includes("* 2") || code.includes("olá") || code.includes("Olá") || code.includes("SELECT") || code.includes("def ");
+            setLogs((prev) => [...prev, { text: "Analisando casos de teste de asserção...", type: "info" }]);
+            if (hasCorrectStructure) {
+              setLogs((prev) => [...prev, { text: "✓ Asserção 1: Passou no fluxo.", type: "success" }, { text: "🎉 Parabéns! Todos os testes passaram!", type: "success" }]);
+              onCompleteChallenge(150, 40);
+              setAiFeedback("Excepcional! Seus testes retornaram verdadeiro no sandbox da DevQuest (+150 XP e +40 moedas)!");
+            } else {
+              setLogs((prev) => [...prev, { text: "❌ Asserção 1: Retornou valor diferente do esperado.", type: "error" }]);
+            }
+          };
+
+          const runAiReview = () => {
+            setIsReviewing(true);
+            simulatedApi.reviewCode(code, activeChallenge?.title || "Laboratório")
+              .then((res) => {
+                setAiFeedback(res.feedback);
+                setIsReviewing(false);
+              });
+          };
+
+          const createAiChallenge = () => {
+            setIsGenerating(true);
+            simulatedApi.generateChallenge(customTk, customDiff)
+              .then((res) => {
+                setLoadedChallenge(res);
+                setCode(res.starterCode);
+                setLogs([
+                  { text: `Novo Desafio de IA: ${res.title}`, type: "info" },
+                  { text: `Descrição: ${res.description}`, type: "info" }
+                ]);
+                setIsGenerating(false);
+                awardCoins(-15);
+              });
+          };
+
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto animate-fade-in p-2">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-2 p-5 bg-slate-900/30 glass border border-slate-800 rounded-3xl space-y-3.5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9.5 h-9.5 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center"><DynamicIcon name="Code2" size={17} /></div>
+                    <div>
+                      <span class="text-[9px] uppercase font-mono text-sky-400 font-extrabold tracking-wider">COMPILADOR INTEGRADO</span>
+                      <h3 class="font-display font-semibold text-slate-105 select-none leading-none leading-none">
+                        {loadedChallenge ? loadedChallenge.title : activeChallenge ? activeChallenge.title : "Laboratório Livre de Algoritmos"}
+                      </h3>
+                    </div>
+                  </div>
+                  <p class="text-xs text-slate-350 leading-relaxed font-sans">
+                    {loadedChallenge ? loadedChallenge.description : activeChallenge ? activeChallenge.codeInstruction : "Escreva seus métodos, realize testes assíncronos de console e valide algoritmos contra a engine do Yuki."}
+                  </p>
+                </div>
+
+                {/* RANDOM GENERATOR PORTAL */}
+                <div class="p-5 bg-slate-900/30 glass border border-slate-800 rounded-3xl space-y-4">
+                  <h4 class="font-display font-bold text-xs flex gap-1.5 items-center text-purple-400"><DynamicIcon name="Sparkles" size={13} /> Gerador de Desafio IA</h4>
+                  <div class="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                      <label class="text-[9px] uppercase text-slate-500 font-bold block mb-1">Caminho</label>
+                      <select value={customTk} onChange={e => setCustomTk(e.target.value)} class="w-full bg-slate-950 border border-slate-800 p-1.5 rounded-lg text-slate-300">
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="html_css">HTML/CSS</option>
+                        <option value="sql">SQL</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[9px] uppercase text-slate-500 font-bold block mb-1">Modo</label>
+                      <select value={customDiff} onChange={e => setCustomDiff(e.target.value)} class="w-full bg-slate-950 border border-slate-800 p-1.5 rounded-lg text-slate-300">
+                        <option value="Iniciante">Iniciante</option>
+                        <option value="Intermediário">Intermediário</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button onClick={createAiChallenge} disabled={isGenerating} class="w-full py-2.5 bg-purple-650 bg-purple-600 hover:bg-purple-550 text-white rounded-xl text-[10px] font-black uppercase transition-all shadow-md shadow-purple-550/20 cursor-pointer">
+                    {isGenerating ? "Processando..." : "Gerar com IA (-15 Moedas)"}
+                  </button>
+                </div>
+              </div>
+
+              {/* EXPERIMENTAL IDE */}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-2 rounded-3xl bg-slate-950 border border-slate-850 flex flex-col min-h-[350px] overflow-hidden shadow-xl">
+                  <div class="p-3 bg-slate-900 border-b border-slate-850 flex justify-between items-center text-xs text-slate-400 font-mono">
+                    <span>main.js • Code Workspace</span>
+                    <button onClick={() => setCode("")} class="text-[9px] bg-slate-800 hover:bg-slate-750 px-2 py-0.5 rounded">Limpar</button>
+                  </div>
+                  <textarea
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    class="flex-1 p-4 bg-transparent text-slate-205 text-xs font-mono focus:outline-none resize-none leading-relaxed text-slate-300"
+                    spellCheck="false"
+                  />
+                  <div class="p-3 bg-slate-900 border-t border-slate-850 flex justify-between items-center bg-slate-950/80">
+                    <div class="flex gap-1.5">
+                      <button onClick={compileCode} class="px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-xl text-xs font-bold transition-colors cursor-pointer">Executar</button>
+                      <button onClick={checkAssertions} class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-black shadow-md shadow-sky-500/10 cursor-pointer">Validar Código</button>
+                    </div>
+                    <button onClick={runAiReview} disabled={isReviewing} class="p-2 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold gap-1 transition-colors flex items-center cursor-pointer">
+                      <DynamicIcon name="Sparkles" size={11} /> <span>Análise IA</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* OUTPUT LOGS */}
+                <div class="rounded-3xl border border-slate-850 bg-slate-900/40 glass min-h-[250px] flex flex-col overflow-hidden">
+                  <div class="p-3.5 bg-slate-950/40 border-b border-slate-850 flex justify-between items-center text-[10px] font-mono uppercase text-slate-400">
+                    <span>Console de Saída</span>
+                    <button onClick={() => setLogs([])} class="text-[8px] hover:text-white">Zerar</button>
+                  </div>
+                  <div class="flex-1 p-4 bg-slate-950 font-mono text-[11px] overflow-y-auto space-y-1.5">
+                    {logs.map((lg, i) => (
+                      <div key={i} class={lg.type === "success" ? "text-emerald-400" : lg.type === "error" ? "text-rose-400" : "text-slate-450 text-slate-500"}>
+                        <span class="text-slate-700 font-bold mr-1.5">&gt;</span>
+                        {lg.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {aiFeedback && (
+                <div class="p-5 rounded-3xl bg-purple-950/20 border border-purple-500/20 text-slate-300 space-y-2 animate-fade-in relative overflow-hidden ai-glow">
+                  <div class="flex justify-between items-center">
+                    <h4 class="font-display font-bold text-xs uppercase tracking-wider text-purple-400 flex items-center gap-1.5"><DynamicIcon name="Sparkles" size={13} /> Feedback do Copiloto IA</h4>
+                    <button onClick={() => setAiFeedback(null)} class="text-[10px] font-bold text-slate-450 hover:text-slate-200">✕ Ocultar</button>
+                  </div>
+                  <p class="text-xs font-sans leading-relaxed text-slate-305 whitespace-pre-wrap">{aiFeedback}</p>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // INTERACTIVE TUTOR CHAT COMPONENT
+        const TutorHub = ({ stats, awardXp, awardCoins, markAchievementUnlocked }) => {
+          const [messages, setMessages] = useState([
+            { role: "model", content: "Olá programador! 🌟 Eu sou o Yuki, seu parceiro e tutor virtual de engenharia. Estou aqui para decifrar dúvidas, sugerir trilhas e propor analogias do cotidiano.\n\nO que gostaria de destrinchar hoje?" }
+          ]);
+          const [input, setInput] = useState("");
+          const [loading, setLoading] = useState(false);
+          const scrollRef = useRef(null);
+
+          useEffect(() => {
+            scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+          }, [messages, loading]);
+
+          const triggerSend = (text) => {
+            if (!text.trim()) return;
+            const userMsg = { role: "user", content: text };
+            setMessages(prev => [...prev, userMsg]);
+            setInput("");
+            setLoading(true);
+
+            simulatedApi.askYuki(text, messages)
+              .then(res => {
+                setMessages(prev => [...prev, { role: "model", content: res.text }]);
+                setLoading(false);
+                awardXp(15);
+                awardCoins(5);
+                markAchievementUnlocked("tutor_talk");
+              });
+          };
+
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto animate-fade-in p-2">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div class="p-5 bg-slate-900/30 glass border border-slate-800 rounded-3xl text-center flex flex-col items-center justify-between gap-5 shadow-lg">
+                  <div class="space-y-3.5">
+                    <div class="relative inline-block">
+                      <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-3xl shadow-lg shadow-purple-500/20 ai-glow">🦊</div>
+                      <span class="absolute bottom-0 right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-950" />
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-slate-205">Tutor Yuki IA</h4>
+                      <span class="text-[9px] uppercase tracking-wider font-mono font-bold text-purple-400">Mentor Especialista</span>
+                      <p class="text-[10px] text-slate-450 leading-relaxed font-sans mt-2">Diga-me o que quer entender, ou use as sugestões rápidas ao lado.</p>
+                    </div>
+                  </div>
+                  <div class="bg-slate-950/40 p-3 rounded-2xl text-[9px] font-mono text-slate-500 text-left w-full space-y-1 border border-slate-850/60">
+                    <span class="text-purple-400 font-bold block uppercase leading-none mb-1">BENEFÍCIOS COBERTOS:</span>
+                    <p>• Dúvidas geram +15 XP</p>
+                    <p>• Conquista Especial Yuki</p>
+                  </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div class="md:col-span-3 rounded-3xl bg-slate-905 border border-slate-800 flex flex-col h-[400px] overflow-hidden glass shadow-xl">
+                  <div class="p-3.5 bg-slate-950/40 border-b border-slate-800 flex justify-between items-center text-xs text-slate-400 font-mono">
+                    <span>Conversando com Tutor Yuki</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+
+                  <div class="flex-1 p-4 overflow-y-auto space-y-3">
+                    {messages.map((m, i) => (
+                      <div key={i} class={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div class={`max-w-[85%] rounded-2xl p-3.5 text-xs font-medium font-sans leading-relaxed whitespace-pre-wrap ${m.role === "user" ? "bg-sky-500 text-white" : "bg-slate-950 border border-slate-850/80 text-slate-300"}`}>
+                          {m.role === "model" && <span class="text-[8px] uppercase font-mono tracking-wider text-purple-400 font-black block mb-1">Yuki:</span>}
+                          {m.content}
+                        </div>
+                      </div>
+                    ))}
+                    {loading && (
+                      <div class="flex justify-start">
+                        <div class="p-3 bg-slate-950/50 rounded-xl space-x-1.5 flex select-none">
+                          <span class="w-1.5 h-1.5 bg-purple-450 rounded-full animate-bounce" />
+                          <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:0.15s]" />
+                          <span class="w-1.5 h-1.5 bg-purple-355 rounded-full animate-bounce [animation-delay:0.3s]" />
+                        </div>
+                      </div>
+                    )}
+                    <div ref={scrollRef} />
+                  </div>
+
+                  <div class="p-2 border-t border-slate-800 flex gap-1.5 overflow-x-auto bg-slate-950/20">
+                    <button onClick={() => triggerSend("💡 Explique CSS Flexbox usando brinquedos")} class="px-2.5 py-1.5 rounded-lg border border-purple-500/10 bg-purple-500/5 text-[9px] font-mono text-purple-400 hover:border-purple-450 transition-colors shrink-0 cursor-pointer">Flexbox Analogia</button>
+                    <button onClick={() => triggerSend("🧬 Variáveis const vs let no JavaScript")} class="px-2.5 py-1.5 rounded-lg border border-purple-500/10 bg-purple-500/5 text-[9px] font-mono text-purple-400 hover:border-purple-450 transition-colors shrink-0 cursor-pointer text-slate-300">Const vs Let</button>
+                    <button onClick={() => triggerSend("🧩 Sugira projeto simples de JavaScript")} class="px-2.5 py-1.5 rounded-lg border border-purple-500/10 bg-purple-500/5 text-[9px] font-mono text-purple-400 hover:border-purple-450 transition-colors shrink-0 cursor-pointer text-slate-300">Sugestão de Projeto</button>
+                  </div>
+
+                  <div class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={e => setInput(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && triggerSend(input)}
+                      placeholder="Dúvida sobre loops, classes, SQL, Python..."
+                      class="flex-1 bg-slate-900 border border-slate-800 text-xs text-slate-200 px-3.5 py-2 rounded-xl focus:outline-none focus:border-purple-500 placeholder:text-slate-500"
+                    />
+                    <button onClick={() => triggerSend(input)} class="p-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl shadow-md transition-colors cursor-pointer"><DynamicIcon name="ArrowRight" size={14} /></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // INTERVIEW SIMULATION GAME COMPONENT
+        const InterviewSim = ({ stats, unlockAchievementInParent, awardXp }) => {
+          const positions = [
+            { id: "front", title: "Frontend Pro", first: "Qual é a diferença funcional entre os métodos 'map' e 'forEach' em JavaScript, e qual deles você usaria no React?" },
+            { id: "back", title: "Backend Systems", first: "No Node.js, como você manipula chamadas intensas de I/O em banco sem travar a Thread única do Event Loop?" },
+            { id: "ai", title: "Alucinações nos LLMs", first: "O que é 'Hallucination' (Alucinação) em modelos GPT/Gemini e quais estratégias arquiteturais você usa no backend para evitar?" }
+          ];
+
+          const [playing, setPlaying] = useState(false);
+          const [role, setRole] = useState(null);
+          const [round, setRound] = useState(1);
+          const [question, setQuestion] = useState("");
+          const [answer, setAnswer] = useState("");
+          const [submitting, setSubmitting] = useState(false);
+
+          const [ratings, setRatings] = useState([]);
+          const [roundsHistory, setRoundsHistory] = useState([]);
+
+          const startSabatina = (item) => {
+            if (!stats.isPremium) {
+              alert("O Simulador de Entrevistas avançadas é do plano DevQuest PRO! Vá para aba Upgrade PRO ou ative virtualmente na área.");
+              return;
+            }
+            setRole(item);
+            setQuestion(item.first);
+            setAnswer("");
+            setRound(1);
+            setRatings([]);
+            setRoundsHistory([]);
+            setPlaying(true);
+          };
+
+          const handleAnswerSubmission = () => {
+            if (!answer.trim()) return;
+            setSubmitting(true);
+            simulatedApi.submitInterview(role.title, question, answer, round)
+              .then(res => {
+                setRatings(prev => [...prev, res.score]);
+                setRoundsHistory(prev => [...prev, { q: question, a: answer, score: res.score, comment: res.feedback }]);
+
+                if (round < 3) {
+                  setQuestion(res.nextQuestion);
+                  setAnswer("");
+                  setRound(r => r + 1);
+                } else {
+                  // End Sabatiana!
+                  setRound(4);
+                  const average = Math.round((ratings.reduce((a, b) => a + b, 0) + res.score) / 3);
+                  awardXp(average * 2.5);
+                  if (average >= 80) unlockAchievementInParent("interview_star");
+                }
+                setSubmitting(false);
+              });
+          };
+
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto animate-fade-in p-2">
+              {!playing ? (
+                <div class="space-y-5">
+                  <div class="p-6 md:p-8 rounded-3xl bg-gradient-to-r from-sky-950/30 to-indigo-950/20 border border-sky-500/20 text-white relative glass">
+                    <div class="space-y-2">
+                      <span class="bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[8px] font-bold font-mono tracking-wider px-2 py-0.5 rounded-full uppercase">Funcionalidade PRO Ilimitada</span>
+                      <h3 class="text-xl md:text-2xl font-display font-black leading-tight text-slate-100">Simulador de Entrevistas de Emprego</h3>
+                      <p class="text-xs text-slate-300 max-w-md leading-relaxed">Perca o receio das arguições técnicas das bigtechs. Responda verbalmente ou por escrito perguntas estruturadas e receba avaliações instantâneas.</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {positions.map((p) => (
+                      <div key={p.id} class="p-5 bg-slate-900/30 glass border border-slate-850 rounded-3xl flex flex-col justify-between gap-4">
+                        <div class="space-y-1.5">
+                          <h4 class="font-bold text-xs text-indigo-400 uppercase font-mono tracking-wider select-all leading-none">{p.title}</h4>
+                          <p class="text-[10px] text-slate-400">Entrevistas e testes de arquitetura e lógica avançada.</p>
+                        </div>
+                        <button onClick={() => startSabatina(p)} class="py-2 bg-sky-500 hover:bg-sky-400 rounded-xl text-xs font-bold font-display text-white transition-all cursor-pointer">Iniciar Entrevista</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div class="p-5 bg-slate-900/30 glass border border-slate-850 rounded-3xl space-y-4">
+                  <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div>
+                      <h3 class="font-bold text-slate-100 text-sm">Examinador Técnico de IA</h3>
+                      <p class="text-[10px] text-sky-400 font-mono tracking-wider uppercase">{role.title}</p>
+                    </div>
+                    <span class="text-xs bg-slate-900 border border-slate-800 px-2.5 py-0.5 text-slate-400 font-mono rounded">{round <= 3 ? `Rodada ${round} de 3` : "Finalizado!"}</span>
+                  </div>
+
+                  {round <= 3 ? (
+                    <div class="space-y-4">
+                      <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-850/60 font-medium text-xs text-slate-200">
+                        <span class="text-[9px] uppercase font-mono tracking-wider text-sky-400 font-black block mb-1">Pergunta:</span>
+                        {question}
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="text-[9px] uppercase font-mono text-slate-500 font-bold">Escreva sua resposta técnica explicativa:</label>
+                        <textarea
+                          value={answer}
+                          onChange={e => setAnswer(e.target.value)}
+                          rows={4}
+                          placeholder="Ex: No React, o map realiza transformações imutáveis retornando outro vetor..."
+                          class="w-full bg-slate-950 border border-slate-850 p-3 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-sky-500 leading-relaxed font-sans"
+                        />
+                      </div>
+                      <div class="flex gap-2">
+                        <button onClick={handleAnswerSubmission} disabled={submitting || !answer.trim()} class="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-extrabold cursor-pointer uppercase">{submitting ? "Corrigindo..." : "Submeter Resposta"}</button>
+                        <button onClick={() => setPlaying(false)} class="px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 rounded-xl text-xs font-semibold cursor-pointer">Desistir</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div class="space-y-5">
+                      <div class="text-center py-4 space-y-1.5 border-b border-slate-850/60">
+                        <span class="text-2xl mt-2 block animate-bounce">🏆</span>
+                        <h4 class="font-display font-black text-slate-100">Resultado Consolidado da Arguição</h4>
+                        <p class="text-[10px] text-slate-400">Sua nota geral foi atribuída pelo motor inteligente com base nos termos técnicos expressados.</p>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-850 max-w-sm mx-auto text-center font-mono">
+                        <div>
+                          <span class="text-[9px] text-slate-500">MÉDIA GERAL</span>
+                          <strong class="block text-2xl text-emerald-400">{Math.round(ratings.reduce((a, b) => a + b, 0) / 3)} / 100</strong>
+                        </div>
+                        <div>
+                          <span class="text-[9px] text-slate-500">APROVAÇÃO</span>
+                          <strong class="block text-xs uppercase text-emerald-400 mt-2">Aprovado no Screen!</strong>
+                        </div>
+                      </div>
+
+                      <div class="space-y-3">
+                        {roundsHistory.map((h, idx) => (
+                          <div key={idx} class="p-3 bg-slate-950/40 rounded-xl border border-slate-850 text-xs space-y-1">
+                            <div class="flex justify-between font-mono text-[10px] text-slate-400">
+                              <span>Sabatina {idx + 1}</span>
+                              <span class="text-emerald-400 font-bold">Nota {h.score}</span>
+                            </div>
+                            <p class="text-slate-450 italic mt-0.5">Q: &quot;{h.q}&quot;</p>
+                            <p class="text-slate-300 bg-slate-950/85 p-2 rounded border border-slate-850/45 text-[11px] font-sans leading-relaxed mt-1 font-bold text-slate-405">{h.comment}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button onClick={() => setPlaying(false)} class="w-full py-2 bg-slate-900 border border-slate-800 text-xs text-slate-300 rounded-xl transition-all cursor-pointer">Voltar ao Sizing de Carreiras</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // CAREER ROADMAPS / MILESTONES COMPONENT
+        const CareerRoadmaps = ({ roadmaps, tracks, setActiveTab }) => {
+          const [selectedRoadmap, setSelectedRoadmap] = useState(roadmaps[0]);
+
+          const checkMilestoneState = (lessonsNeeded) => {
+            let matches = 0;
+            lessonsNeeded.forEach((needId) => {
+              tracks.forEach((tk) => {
+                const found = tk.lessons.find((l) => l.id === needId);
+                if (found && found.completed) matches += 1;
+              });
+            });
+            return matches >= lessonsNeeded.length;
+          };
+
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto animate-fade-in p-2">
+              <div class="flex gap-4 border-b border-slate-900/60 pb-2">
+                {roadmaps.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setSelectedRoadmap(r)}
+                    class={`pb-2.5 font-black text-xs transition-colors cursor-pointer ${
+                      selectedRoadmap.id === r.id ? "border-b-2 border-sky-500 text-sky-400" : "text-slate-405 hover:text-white"
+                    }`}
+                  >
+                    🚀 {r.role}
+                  </button>
+                ))}
+              </div>
+
+              {/* TREE DETAILS CONTAINER */}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+                <div class="p-5 bg-slate-900/30 glass border border-slate-800 rounded-3xl space-y-4">
+                  <div class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center"><DynamicIcon name="Network" size={17} /></div>
+                  <div>
+                    <span class="text-[9px] uppercase font-mono tracking-wider text-sky-450 font-bold block">Vocacional Técnico</span>
+                    <h4 class="font-display font-medium text-slate-100 text-sm leading-tight leading-none leading-none">{selectedRoadmap.title}</h4>
+                    <p class="text-[11px] text-slate-400 leading-relaxed font-sans mt-2">{selectedRoadmap.description}</p>
+                  </div>
+                  <button onClick={() => setActiveTab("lessons")} class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold rounded-xl transition-all w-full cursor-pointer">Resolver Requisitos das Trilhas</button>
+                </div>
+
+                <div class="md:col-span-2 p-5 bg-slate-900/30 glass border border-slate-800 rounded-3xl space-y-6 relative">
+                  <div class="absolute left-9 md:left-11.5 top-8 bottom-8 w-0.5 bg-slate-850" />
+                  <div class="space-y-6 relative z-10">
+                    {selectedRoadmap.milestones.map((m, idx) => {
+                      const complete = checkMilestoneState(m.requiredLessons);
+                      return (
+                        <div key={m.id} class="flex gap-4 items-start">
+                          <div class={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-4 transition-all shrink-0 ${
+                            complete ? "bg-sky-550/10 border-sky-500 text-sky-400" : "bg-slate-950 border-slate-850 text-slate-650"
+                          }`}>{complete ? "✓" : idx + 1}</div>
+                          <div class={`p-4 rounded-2xl flex-1 border transition-colors ${complete ? "bg-sky-500/5 border-sky-500/15" : "bg-slate-950/40 border-slate-850"}`}>
+                            <div class="flex justify-between items-center text-xs">
+                              <h5 class="font-bold text-slate-205">{m.title}</h5>
+                              <span class={`text-[8px] uppercase tracking-wider font-mono font-bold px-2 py-0.5 rounded ${complete ? "bg-emerald-500/15 text-emerald-400" : "bg-slate-800 text-slate-500"}`}>{complete ? "Completa ✓" : "Trancada"}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">{m.description}</p>
+                            {m.requiredLessons.length > 0 && (
+                              <div class="mt-2.5 pt-2.5 border-t border-slate-850 flex gap-2 overflow-x-auto">
+                                <span class="text-[8px] uppercase tracking-wider font-mono text-slate-550 font-bold text-slate-500">Módulos:</span>
+                                {m.requiredLessons.map(id => (
+                                  <span key={id} class="text-[8px] font-mono select-all bg-sky-500/10 text-sky-400 px-1.5 py-0.5 rounded border border-sky-500/10">{id.toUpperCase()}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // LIGAS & SOCIAL COMPONENT WITH DUEL MINI-GAME
+        const SocialArea = ({ userXpThisWeek, userLevel, awardXp, awardCoins, triggerStreakMultiplier }) => {
+          const [rankings, setRankings] = useState(
+            WEEKLY_RANKING.map(r => r.isCurrentUser ? { ...r, xpThisWeek: userXpThisWeek, level: userLevel } : r)
+          );
+          const [grps, setGrps] = useState(MOCK_GROUPS);
+
+          const [duel, setDuel] = useState(false);
+          const [opponent, setOpponent] = useState(null);
+          const [duelIdx, setDuelIdx] = useState(0);
+          const [duelScore, setDuelScore] = useState(0);
+          const [duelFeedback, setDuelFeedback] = useState(null);
+
+          const qDuel = [
+            { q: "Qual comando CSS alinha itens no eixo perpendicular (cross axis) do flex?", options: ["justify-content", "align-items", "flex-gap", "display-grid"], correct: 1 },
+            { q: "No JS, qual é a saída para a instrução: typeof null?", options: ["null", "undefined", "object", "string"], correct: 2 },
+            { q: "Em Python, como inserimos comentários de linha única?", options: ["//", "/*", "#", "<!--"], correct: 2 }
+          ];
+
+          const startFastCombat = () => {
+            const oppList = rankings.filter(r => !r.isCurrentUser);
+            setOpponent(oppList[Math.floor(Math.random() * oppList.length)]);
+            setDuelIdx(0);
+            setDuelScore(0);
+            setDuelFeedback(null);
+            setDuel(true);
+          };
+
+          const checkDuelAnswer = (choice) => {
+            const curr = qDuel[duelIdx];
+            const ok = choice === curr.correct;
+            let currentPoints = duelScore + (ok ? 1 : 0);
+            if (ok) setDuelScore(currentPoints);
+
+            if (duelIdx < qDuel.length - 1) {
+              setDuelIdx(d => d + 1);
+            } else {
+              const oppScore = Math.floor(Math.random() * 2) + 1; // 1 ou 2
+              let outcome = "";
+              if (currentPoints > oppScore) {
+                outcome = `VITÓRIA! Você derrotou ${opponent.name} fazendo ${currentPoints} a ${oppScore}. Ganhou +100 XP, +40 moedas e ativou bônus de streak!`;
+                awardXp(100);
+                awardCoins(40);
+                triggerStreakMultiplier();
+              } else if (currentPoints === oppScore) {
+                outcome = `EMPATE! Ambos cravaram ${currentPoints} acertos na rodada. Recebeu +20 XP de consolação.`;
+                awardXp(20);
+              } else {
+                outcome = `DERROTA! Você fez ${currentPoints} acertos e acabou perdendo de ${opponent.name} que marcou ${oppScore}.`;
+              }
+              setDuelFeedback(outcome);
+            }
+          };
+
+          const handleJoinGroup = (id) => {
+            setGrps((prev) =>
+              prev.map(g => g.id === id ? { ...g, joined: !g.joined, membersCount: g.joined ? g.membersCount - 1 : g.membersCount + 1 } : g)
+            );
+          };
+
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto p-2 animate-fade-in">
+              {duel && (
+                <div class="p-5 bg-slate-900/60 glass border border-sky-505/20 rounded-3xl animate-fade-in border-sky-500/20 max-w-lg mx-auto space-y-4">
+                  <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                    <h4 class="font-display font-medium text-xs text-sky-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">⚔️ Arena de Duelos</h4>
+                    <button onClick={() => setDuel(false)} class="text-[10px] text-slate-500 hover:text-white">✕ Sair</button>
+                  </div>
+
+                  <div class="flex justify-around items-center p-3.5 bg-slate-950/70 border border-slate-850 rounded-2xl text-center text-xs">
+                    <div>
+                      <span class="block text-xl">🦸‍♀️</span>
+                      <strong class="text-sky-400">Você</strong>
+                    </div>
+                    <span class="text-[10px] text-slate-650 font-mono font-extrabold uppercase">VS</span>
+                    <div>
+                      <span class="block text-xl">{opponent?.avatar}</span>
+                      <strong class="text-purple-400">{opponent?.name}</strong>
+                    </div>
+                  </div>
+
+                  {!duelFeedback ? (
+                    <div class="space-y-3.5">
+                      <div class="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                        <span class="text-[9px] text-sky-450 block font-mono font-extrabold uppercase">Questão {duelIdx + 1} de {qDuel.length}</span>
+                        <p class="text-xs font-semibold text-slate-205 mt-1">{qDuel[duelIdx].q}</p>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1.5 text-xs">
+                        {qDuel[duelIdx].options.map((optLabel, oIdx) => (
+                          <button key={oIdx} onClick={() => checkDuelAnswer(oIdx)} class="w-full p-2.5 bg-slate-950 hover:bg-slate-850 rounded-xl border border-slate-850 text-left cursor-pointer">{optLabel}</button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div class="text-center space-y-4 py-2 leading-relaxed">
+                      <p class="bg-slate-950 p-4 rounded-xl border border-slate-850 text-xs text-slate-250 font-sans font-bold">{duelFeedback}</p>
+                      <button onClick={startFastCombat} class="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 rounded-xl text-xs font-black uppercase text-white cursor-pointer select-none">Duelo Novamente</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* COMMUNICATIVE CHATS */}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-2 p-5 bg-slate-900/30 glass border border-slate-800 rounded-3xl space-y-4 shadow-lg">
+                  <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+                    <div>
+                      <h4 class="font-display font-medium text-slate-100 text-sm flex gap-1.5 items-center"><DynamicIcon name="Trophy" className="text-yellow-500" size={15} /> Programadores da Liga Semanal</h4>
+                      <p class="text-[10px] text-slate-450 leading-relaxed mt-0.5">Suba a classificação estudando rotinas nas semanas de ligas.</p>
+                    </div>
+                    <button onClick={startFastCombat} class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-black transition-all cursor-pointer">Desafiar Arena ⚔️</button>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    {rankings.map((u, i) => (
+                      <div key={i} class={`p-3 rounded-2xl flex justify-between items-center border transition-all ${u.isCurrentUser ? "bg-sky-500/10 border-sky-500/25" : "bg-slate-950/40 border-slate-850"}`}>
+                        <div class="flex items-center gap-3">
+                          <span class={`p-1 w-6 text-center text-xs font-black font-mono ${i===0?'text-yellow-500':i===1?'text-slate-400':i===2?'text-amber-500':'text-slate-600'}`}>{i+1}º</span>
+                          <span class="text-lg select-all">{u.avatar}</span>
+                          <div>
+                            <h5 class="text-xs font-semibold leading-tight">{u.name} {u.isCurrentUser ? "(Você)" : ""}</h5>
+                            <span class="text-[9px] text-slate-500 font-mono">Nível {u.level}</span>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <strong class="text-xs text-slate-200 block font-mono">{u.xpThisWeek} XP</strong>
+                          <span class="text-[9px] text-slate-500 leading-none">semanal</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* STUDY COMUNITIES */}
+                <div class="p-5 bg-slate-900/30 glass border border-slate-805 border-slate-800 rounded-3xl space-y-4">
+                  <h4 class="font-display font-bold text-xs">Salas de Estudo</h4>
+                  <div class="space-y-3.5">
+                    {grps.map(g => (
+                      <div key={g.id} class="p-3 bg-slate-950/40 border border-slate-850 rounded-xl space-y-1.5 text-xs">
+                        <div class="flex justify-between items-center text-[10px] font-mono">
+                          <h5 class="font-bold">{g.name}</h5>
+                          <span class="bg-sky-500/15 text-sky-400 px-1 py-0.5 rounded leading-none">{g.category}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-450 leading-relaxed font-sans">{g.desc}</p>
+                        <button onClick={() => handleJoinGroup(g.id)} class={`w-full py-1.5 rounded-lg font-bold text-[9px] font-mono uppercase transition-colors shrink-0 cursor-pointer ${
+                          g.joined ? "bg-slate-800 text-slate-300" : "bg-sky-500 hover:bg-sky-450 text-white font-extrabold"
+                        }`}>{g.joined ? "Aderido (Sair)" : "Participar"}</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // MONETIZATION PAGE COMPONENT
+        const MonetizationPage = ({ stats, activatePremium }) => {
+          return (
+            <div class="space-y-6 max-w-4xl mx-auto p-2 animate-fade-in text-center">
+              <div class="space-y-2 max-w-md mx-auto">
+                <span class="text-2xl mt-4 block">👑</span>
+                <h3 class="font-display font-black text-2xl text-slate-50">Assine o DevQuest Premium Pro</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Ganhe acesso ilimitado ao Tutor Yuki, dezenas de novos desafios via IA e o Simulador de Entrevistas Técnicas.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch max-w-2xl mx-auto text-left">
+                <div class="p-5 bg-slate-905/40 border border-slate-850 rounded-3xl flex flex-col justify-between opacity-80 gap-6 glass shadow-lg">
+                  <div class="space-y-3">
+                    <div>
+                      <span class="text-[9px] uppercase font-mono tracking-wider text-slate-500 font-bold block">Plano Atual</span>
+                      <h4 class="font-bold text-slate-100">Explorador Grátis</h4>
+                    </div>
+                    <strong>R$ 0 <span class="text-[9px] font-normal text-slate-500 uppercase">/ sempre</span></strong>
+                    <div class="w-full h-px bg-slate-800" />
+                    <ul class="text-[11px] text-slate-400 space-y-1.5 font-bold">
+                      <li>✓ Acesso às 10 Trilhas Completas</li>
+                      <li>✓ Sidebar do Painel e Rank</li>
+                      <li>✕ IAs e Entrevistas (Requer Moedas)</li>
+                    </ul>
+                  </div>
+                  <button class="py-2.5 w-full bg-slate-800 text-slate-400 text-xs rounded-xl font-bold cursor-not-allowed uppercase" disabled>Plano Ativado</button>
+                </div>
+
+                {/* PREMIUM CARD */}
+                <div class="p-5 bg-gradient-to-b from-purple-500/10 to-indigo-950/20 border-2 border-purple-500 rounded-3xl flex flex-col justify-between gap-6 glass shadow-xl shadow-purple-500/10 relative overflow-hidden ai-glow">
+                  <span class="absolute top-0 right-0 bg-purple-600 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl shadow-sm">Popular</span>
+                  <div class="space-y-3">
+                    <div>
+                      <span class="text-[9px] uppercase font-mono tracking-wider text-purple-405 text-purple-400 font-bold block">Recursos de IA Ilimitados</span>
+                      <h4 class="font-black text-slate-100 flex gap-1 items-center">DevQuest PRO 👑</h4>
+                    </div>
+                    <strong>R$ 29,90 <span class="text-[9px] font-normal text-slate-400 uppercase">/ mensal</span></strong>
+                    <div class="w-full h-px bg-slate-850" />
+                    <ul class="text-[11px] text-slate-300 space-y-1.5 leading-relaxed font-semibold">
+                      <li>✓ Tutor Yuki IA Livre Sem Custos</li>
+                      <li>✓ Simulador de Entrevista Técnica Real</li>
+                      <li>✓ Novas missões geradas infinitamente</li>
+                      <li>✓ Certificação de Conclusão Digitais</li>
+                    </ul>
+                  </div>
+                  {stats.isPremium ? (
+                    <div class="py-2.5 text-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-xl text-xs font-black uppercase">Seu Plano Está Ativo ✓</div>
+                  ) : (
+                    <button onClick={activatePremium} class="py-2.5 w-full bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-xl font-black transition-all shadow-md shadow-purple-500/20 cursor-pointer uppercase">Ativar Licença PRO Instantaneamente</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+
+        // ROOT APP MOUNT ELEMENT
+        function App() {
+          const [stats, setStats] = useState(() => {
+            const local = localStorage.getItem("devquest_stats");
+            return local ? JSON.parse(local) : { level: 1, xp: 0, xpNeeded: 1000, streak: 5, energy: 5, maxEnergy: 5, coins: 120, isPremium: false };
+          });
+
+          const [tracks, setTracks] = useState(() => {
+            const local = localStorage.getItem("devquest_tracks");
+            return local ? JSON.parse(local) : PREDEFINED_TRACKS;
+          });
+
+          const [achievements, setAchievements] = useState(() => {
+            const local = localStorage.getItem("devquest_achievements");
+            return local ? JSON.parse(local) : INITIAL_ACHIEVEMENTS;
+          });
+
+          const [activeTab, setActiveTab] = useState("dashboard");
+          const [darkMode, setDarkMode] = useState(true);
+
+          // Work elements
+          const [activeChallenge, setActiveChallenge] = useState(null);
+          const [activeChallengeTrackId, setActiveChallengeTrackId] = useState(null);
+
+          const [hudAlert, setHudAlert] = useState(null);
+
+          useEffect(() => localStorage.setItem("devquest_stats", JSON.stringify(stats)), [stats]);
+          useEffect(() => localStorage.setItem("devquest_tracks", JSON.stringify(tracks)), [tracks]);
+          useEffect(() => localStorage.setItem("devquest_achievements", JSON.stringify(achievements)), [achievements]);
+
+          const awardXp = (amount) => {
+            setStats((prev) => {
+              let newXp = prev.xp + amount;
+              let newLevel = prev.level;
+              let newXpNeeded = prev.xpNeeded;
+              let hasUp = false;
+
+              while (newXp >= newXpNeeded) {
+                newXp -= newXpNeeded;
+                newLevel += 1;
+                newXpNeeded = Math.round(newXpNeeded * 1.5);
+                hasUp = true;
+              }
+
+              if (hasUp) {
+                setHudAlert(`🎉 SENSACIONAL! Você subiu de nível! Agora você está no Nível ${newLevel}. Continue assim!`);
+                setTimeout(() => setHudAlert(null), 5000);
+              }
+
+              return {
+                ...prev,
+                level: newLevel,
+                xp: newXp,
+                xpNeeded: newXpNeeded,
+                coins: prev.coins + Math.round(amount * 0.25)
+              };
+            });
+            unlockAchievement("first_steps");
+          };
+
+          const deductEnergy = (amount) => {
+            setStats(prev => ({ ...prev, energy: Math.max(0, prev.energy - amount) }));
+          };
+
+          const recoverEnergy = (cost, val) => {
+            setStats((prev) => {
+              if (prev.coins < cost) return prev;
+              return {
+                ...prev,
+                energy: Math.min(prev.maxEnergy, prev.energy + val),
+                coins: Math.max(0, prev.coins - cost)
+              };
+            });
+          };
+
+          const awardCoins = (amount) => {
+            setStats(prev => ({ ...prev, coins: Math.max(0, prev.coins + amount) }));
+          };
+
+          const onCompleteLesson = (trackId, lessonId, xpReward, coinsReward) => {
+            setTracks((prev) =>
+              prev.map((t) => {
+                if (t.id === trackId) {
+                  return {
+                    ...t,
+                    lessons: t.lessons.map(l => l.id === lessonId ? { ...l, completed: true } : l)
+                  };
+                }
+                return t;
+              })
+            );
+            awardXp(xpReward);
+            awardCoins(coinsReward);
+          };
+
+          const onSelectCodeChallengeInSandbox = (lesson, trackId) => {
+            setActiveChallenge(lesson);
+            setActiveChallengeTrackId(trackId);
+          };
+
+          const onCompleteChallenge = (xpReward, coinsReward) => {
+            awardXp(xpReward);
+            awardCoins(coinsReward);
+            if (activeChallenge && activeChallengeTrackId) {
+              onCompleteLesson(activeChallengeTrackId, activeChallenge.id, 0, 0);
+            }
+            unlockAchievement("code_master");
+          };
+
+          const unlockAchievement = (id) => {
+            setAchievements((prev) =>
+              prev.map((a) => {
+                if (a.id === id && !a.unlocked) {
+                  awardXp(a.xpReward);
+                  return { ...a, unlocked: true };
+                }
+                return a;
+              })
+            );
+          };
+
+          const triggerStreakMultiplier = () => {
+            setStats(p => ({ ...p, streak: p.streak + 1 }));
+            unlockAchievement("streak_3");
+          };
+
+          const activatePremiumInParentState = () => {
+            setStats(p => ({ ...p, isPremium: true }));
+            setHudAlert("👑 Licença DevQuest Premium PRO unbloqueada! Tutor Yuki está livre e Entrevistas ativadas.");
+            setTimeout(() => setHudAlert(null), 5000);
+          };
+
+          const collectDailyChest = () => {
+            awardCoins(50);
+            awardXp(30);
+            setHudAlert("🎁 Baú coletado com sucesso! Ganhou +50 moedas e +30 XP de presença.");
+            setTimeout(() => setHudAlert(null), 4000);
+          };
+
+          return (
+            <div class={`min-h-screen font-sans antialiased selection:bg-indigo-500/30 transition-colors duration-200 ${
+              darkMode ? "bg-slate-950 text-slate-100 dark" : "bg-slate-50 text-slate-800"
+            }`}>
+              {hudAlert && (
+                <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50 p-4.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-indigo-600 text-white font-bold leading-relaxed shadow-xl max-w-md border border-white/20 text-xs flex gap-3 items-center">
+                  <span>✨</span>
+                  <span>{hudAlert}</span>
+                  <button onClick={() => setHudAlert(null)} class="text-white/60 hover:text-white">✕</button>
+                </div>
+              )}
+
+              <div class="flex flex-col md:flex-row min-h-screen">
+                <Sidebar
+                  stats={stats}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  darkMode={darkMode}
+                  setDarkMode={setDarkMode}
+                />
+
+                <main class="flex-1 p-4 md:p-8 overflow-y-auto max-h-screen">
+                  {activeTab === "dashboard" && (
+                    <Dashboard
+                      stats={stats}
+                      achievements={achievements}
+                      claimReward={(id, xp) => {
+                        setAchievements(prev => prev.map(a => a.id === id ? { ...a, unlocked: false } : a));
+                        awardXp(xp);
+                      }}
+                      drinkCoffee={() => recoverEnergy(25, 3)}
+                      openTrack={() => setActiveTab("lessons")}
+                      collectDailyChest={collectDailyChest}
+                    />
+                  )}
+
+                  {activeTab === "lessons" && (
+                    <LessonsEngine
+                      tracks={tracks}
+                      stats={stats}
+                      onCompleteLesson={onCompleteLesson}
+                      deductEnergy={deductEnergy}
+                      onSelectCodeChallenge={onSelectCodeChallengeInSandbox}
+                      setActiveTab={setActiveTab}
+                    />
+                  )}
+
+                  {activeTab === "sandbox" && (
+                    <CodeSandbox
+                      activeChallenge={activeChallenge}
+                      trackId={activeChallengeTrackId}
+                      stats={stats}
+                      onCompleteChallenge={onCompleteChallenge}
+                      awardCoins={awardCoins}
+                    />
+                  )}
+
+                  {activeTab === "tutor" && (
+                    <TutorHub
+                      stats={stats}
+                      awardXp={awardXp}
+                      awardCoins={awardCoins}
+                      markAchievementUnlocked={unlockAchievement}
+                    />
+                  )}
+
+                  {activeTab === "interview" && (
+                    <InterviewSim
+                      stats={stats}
+                      unlockAchievementInParent={unlockAchievement}
+                      awardXp={awardXp}
+                    />
+                  )}
+
+                  {activeTab === "roadmaps" && (
+                    <CareerRoadmaps
+                      roadmaps={CAREER_ROADMAPS}
+                      tracks={tracks}
+                      setActiveTab={setActiveTab}
+                    />
+                  )}
+
+                  {activeTab === "social" && (
+                    <SocialArea
+                      userXpThisWeek={450 + stats.xp * 0.1}
+                      userLevel={stats.level}
+                      awardXp={awardXp}
+                      awardCoins={awardCoins}
+                      triggerStreakMultiplier={triggerStreakMultiplier}
+                    />
+                  )}
+
+                  {activeTab === "premium" && (
+                    <MonetizationPage
+                      stats={stats}
+                      activatePremium={activatePremiumInParentState}
+                    />
+                  )}
+                </main>
+              </div>
+            </div>
+          );
+        }
+
+        // MOUNT APP INSTANCE
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+    </script>
+</body>
+</html>
