@@ -1,0 +1,6 @@
+{
+  "name": "DevQuest",
+  "description": "Plataforma gamificada e interativa para aprendizado de programação com tutor inteligente de IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
